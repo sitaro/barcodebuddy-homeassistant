@@ -1,5 +1,5 @@
 {
-    "name": "Home Assistant Barcode Buddy for Grocy Add-on Repository",
-    "url": "https://github.com/Forceu/barcodebuddy-homeassistant",
-    "maintainer": "tom-winkler@freenet.de"
+  "name": "Barcode Buddy Custom Repository",
+  "url": "https://github.com/sitaro/barcodebuddy-homeassistant",
+  "maintainer": "Mathias Päzolt <mpaezolt@google.com"
 }
