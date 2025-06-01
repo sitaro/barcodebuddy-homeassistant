@@ -43,7 +43,7 @@ ingress_entry: "/"
 panel_icon: "mdi:barcode-scan"
 
 # Docker Image
-image: "f0rc3/{arch}-barcodebuddy-homeassistant"
+image: "f0rc3/barcodebuddy:latest"
 
 # Benutzer-Konfigurierbare Optionen
 options:
