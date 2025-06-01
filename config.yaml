@@ -39,7 +39,7 @@ ingress: true
 ingress_port: 0
 
 # Original Docker Image verwenden
-image: "f0rc3/{arch}-barcodebuddy-homeassistant"
+image: "f0rc3/barcodebuddy:latest"
 
 options:
   require_api_key: false
