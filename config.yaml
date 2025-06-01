@@ -1,7 +1,6 @@
-# config.yaml - Einfache Lösung ohne run.sh
-name: "Barcode Buddy USB Scanner"
-version: "1.0.0"
-slug: "barcodebuddy-usb"
+name: "Barcode Buddy (Custom USB Scanner)"
+version: "dev"
+slug: "barcodebuddy_custom"
 description: "Barcode Buddy with USB scanner support"
 arch:
   - armhf
@@ -12,45 +11,54 @@ arch:
 startup: application
 boot: auto
 init: false
+map:
+  - "config:rw"
+  - "ssl"
 
-# USB-Geräte direkt weiterleiten
+# USB-Geräte weiterleiten
 devices:
-  - "/dev/input/event0:/dev/input/event0"
-  - "/dev/input/event1:/dev/input/event1"
-  - "/dev/input/event2:/dev/input/event2"
+  - "/dev/input/event0"
+  - "/dev/input/event1"
+  - "/dev/input/event2"
 
-# udev für USB-Erkennung
+# USB-Support aktivieren  
 udev: true
 
 # Umgebungsvariablen setzen
 environment:
   ATTACH_BARCODESCANNER: "true"
 
-# Bestehende Konfiguration beibehalten
-map:
-  - "config:rw"
-  - "ssl"
-
+# Port-Mapping
 ports:
   "80/tcp": 8083
 
+ports_description:
+  "80/tcp": "Web interface"
+
+# Web UI Konfiguration
 webui: "http://[HOST]:[PORT:80]"
 ingress: true
 ingress_port: 0
+ingress_entry: "/"
+panel_icon: "mdi:barcode-scan"
 
-# Original Docker Image verwenden
-image: "f0rc3/barcodebuddy:latest"
+# Docker Image
+image: "f0rc3/{arch}-barcodebuddy-homeassistant"
 
+# Benutzer-Konfigurierbare Optionen
 options:
   require_api_key: false
   disable_auth: true
   debug: false
   curl_allow_insecure_ssl_ca: false
   curl_allow_insecure_ssl_host: false
+  scanner_device: "/dev/input/event0"
 
+# Schema für Validierung
 schema:
   require_api_key: bool
   disable_auth: bool
   debug: bool
   curl_allow_insecure_ssl_ca: bool
   curl_allow_insecure_ssl_host: bool
+  scanner_device: /dev/input/event0
