@@ -61,4 +61,4 @@ schema:
   debug: bool
   curl_allow_insecure_ssl_ca: bool
   curl_allow_insecure_ssl_host: bool
-  scanner_device: /dev/input/event0
+  scanner_device: str?
