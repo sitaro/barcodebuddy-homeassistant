@@ -17,4 +17,4 @@ ENV ATTACH_BARCODESCANNER=true
 RUN apk add --no-cache evtest udev || echo "Input tools may already be available"
 
 # Container normal starten (verwendet den Standard-Startbefehl des Base-Images)
-CMD ["/init"]
+#CMD ["/init"]
