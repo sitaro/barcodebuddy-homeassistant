@@ -1,5 +1,5 @@
 name: "Barcode Buddy USB Scanner"
-version: "1.1.2"
+version: "1.1.3"
 slug: "barcodebuddy-usb"
 description: "Barcode Buddy with USB scanner support"
 arch:
@@ -12,12 +12,17 @@ startup: application
 boot: auto
 init: false
 
-# USB-Geräte direkt weiterleiten
+# Privileged Modus für vollständigen Hardware-Zugriff
+privileged: true
+
+# USB-Geräte mappen (Host hat event0-event3)
 devices:
-  - "/dev/input/event0:/dev/input/event0"
-  - "/dev/input/event1:/dev/input/event1"
-  - "/dev/input/event2:/dev/input/event2"
-  - "/dev/input/event3:/dev/input/event3"
+  - "/dev/input:/dev/input"
+  
+# Zusätzliche Capabilities
+cap_add:
+  - SYS_RAWIO
+  - DAC_OVERRIDE
 
 # udev für USB-Erkennung
 udev: true
@@ -38,16 +43,14 @@ webui: "http://[HOST]:[PORT:80]"
 ingress: true
 ingress_port: 0
 
-# KEIN image: Feld - verwendet lokales Dockerfile!
-
 # Benutzer-konfigurierbare Optionen
 options:
   require_api_key: false
   disable_auth: true
-  debug: false
+  debug: true
   curl_allow_insecure_ssl_ca: false
   curl_allow_insecure_ssl_host: false
-  scanner_device: "/dev/input/event3"
+  scanner_device: "/dev/input/event2"
 
 # Schema für Validierung
 schema:
@@ -56,4 +59,4 @@ schema:
   debug: bool
   curl_allow_insecure_ssl_ca: bool
   curl_allow_insecure_ssl_host: bool
-  scanner_device: str?
+  scanner_device: str
