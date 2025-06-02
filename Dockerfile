@@ -3,7 +3,7 @@ FROM f0rc3/barcodebuddy:latest
 
 # Home Assistant Add-on Labels
 LABEL \
-    io.hass.version="1.1.8" \
+    io.hass.version="1.1.9" \
     io.hass.type="addon" \
     io.hass.arch="armhf|armv7|aarch64|amd64|i386"
 

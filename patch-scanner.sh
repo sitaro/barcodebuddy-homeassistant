@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# patch-scanner.sh v1.1.8 - Mit Grocy-Ingress-Integration
+# patch-scanner.sh v1.1.9 - Syntax-Fix und Grocy-URL-Korrektur
 
-echo "=== Barcode Buddy Scanner-Patch v1.1.8 (Grocy-Ingress-Integration) ==="
+echo "=== Barcode Buddy Scanner-Patch v1.1.9 (Grocy-Ingress-Fix) ==="
 
 # Debug-Modus und Konfiguration lesen
 DEBUG_MODE="false"
 CONFIG_PATH="/data/options.json"
 
-# Grocy-Einstellungen (Standard-Werte mit Ingress-Support)
-GROCY_SERVER_URL="http://homeassistant:8123/hassio/ingress/GROCY_ADDON_ID"
+# Grocy-Einstellungen (Standard-Werte mit korrekter URL)
+GROCY_SERVER_URL="http://ha.mathops.de:8123/hassio/ingress/a0d7b954_grocy"
 GROCY_API_KEY=""
 GROCY_USERNAME="admin"
 AUTO_SETUP_GROCY="true"
@@ -22,8 +22,10 @@ if [ -f "$CONFIG_PATH" ]; then
     fi
     
     # Grocy-Konfiguration aus Add-on-Optionen lesen (mit Ingress-Support)
-    GROCY_SERVER_URL=$(grep -o '"grocy_server_url"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_PATH" 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' | head -1)
-    [ -z "$GROCY_SERVER_URL" ] && GROCY_SERVER_URL="http://homeassistant:8123/hassio/ingress/GROCY_ADDON_ID"
+    CONFIGURED_URL=$(grep -o '"grocy_server_url"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_PATH" 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' | head -1)
+    if [ -n "$CONFIGURED_URL" ] && [ "$CONFIGURED_URL" != "null" ]; then
+        GROCY_SERVER_URL="$CONFIGURED_URL"
+    fi
     
     GROCY_API_KEY=$(grep -o '"grocy_api_key"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_PATH" 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' | head -1)
     
@@ -39,7 +41,13 @@ if [ -f "$CONFIG_PATH" ]; then
     fi
 fi
 
-# Scanner-Gerät konfigurieren (wie vorher)
+# Automatische Ingress-Erkennung (KORRIGIERT)
+if echo "$GROCY_SERVER_URL" | grep -q "hassio/ingress"; then
+    USE_INGRESS="true"
+    echo "🔗 Ingress-URL automatisch erkannt"
+fi
+
+# Scanner-Gerät konfigurieren
 SCANNER_DEVICE="/dev/input/event2"
 if [ -f "$CONFIG_PATH" ]; then
     CONFIGURED_DEVICE=$(grep -o '"scanner_device"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_PATH" 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' | head -1)
@@ -52,7 +60,7 @@ echo "Scanner-Gerät: $SCANNER_DEVICE"
 echo "Grocy-Server: $GROCY_SERVER_URL"
 echo "Ingress-Modus: $USE_INGRESS"
 
-# grabInput.sh patchen (wie vorher)
+# grabInput.sh patchen
 GRAB_SCRIPT="/app/bbuddy/example/grabInput.sh"
 
 if [ -f "$GRAB_SCRIPT" ]; then
@@ -65,9 +73,9 @@ if [ -f "$GRAB_SCRIPT" ]; then
     
     cat > "$GRAB_SCRIPT" << 'EOF'
 #!/bin/bash
-# Scanner-Wrapper v1.1.8 - Grocy-Ingress-Integration
+# Scanner-Wrapper v1.1.9 - Syntax-Fix
 
-echo "Scanner-Wrapper v1.1.8 gestartet (Grocy-Ingress-Integration)"
+echo "Scanner-Wrapper v1.1.9 gestartet (Syntax-Fix)"
 
 # Hardware-Check
 if [ ! -d "/dev/input/" ]; then
@@ -126,39 +134,34 @@ fi
 EOF
     
     chmod +x "$GRAB_SCRIPT"
-    echo "✅ Scanner-Wrapper v1.1.8 installiert"
+    echo "✅ Scanner-Wrapper v1.1.9 installiert"
 else
     echo "⚠️  grabInput.sh nicht gefunden"
 fi
 
-# NEU: Grocy-Integration Setup
+# Grocy-Integration Setup (SYNTAX KORRIGIERT)
 echo ""
-echo "🏪 Konfiguriere Grocy-Integration (Ingress-Support)...
+echo "🏪 Konfiguriere Grocy-Integration (Ingress-Support)..."
 
-# Ingress-spezifische API-URL-Behandlung
-if [ "$USE_INGRESS" = "true" ] || echo "$GROCY_SERVER_URL" | grep -q "hassio/ingress"; then
+# Ingress-spezifische API-URL-Behandlung  
+if [ "$USE_INGRESS" = "true" ]; then
     echo "🔗 Ingress-Modus erkannt"
-    
-    # Für Ingress-URLs ist die API direkt über die Base-URL erreichbar
     GROCY_API_URL="${GROCY_SERVER_URL}/api/"
-    
-    # Ingress-URLs benötigen manchmal spezielle Header
     GROCY_BASE_URL="$GROCY_SERVER_URL"
-    
     echo "📡 Ingress API-URL: $GROCY_API_URL"
 else
-    echo "🔗 Standard-Modus (direkter Port)"
+    echo "🔗 Standard-Modus - direkter Port"
     GROCY_API_URL="${GROCY_SERVER_URL}/api/"
     GROCY_BASE_URL="$GROCY_SERVER_URL"
-fi"
+fi
 
-# Barcode Buddy Config mit Grocy-Settings erstellen
+# Barcode Buddy Config erstellen
 BB_CONFIG="/app/bbuddy/config.php"
 [ -f "$BB_CONFIG" ] && cp "$BB_CONFIG" "${BB_CONFIG}.backup"
 
 cat > "$BB_CONFIG" << BBCONFIG
 <?php
-// Barcode Buddy Config - Home Assistant Add-on v1.1.8
+// Barcode Buddy Config - Home Assistant Add-on v1.1.9
 // Authentication deaktiviert + Grocy-Ingress-Integration
 
 define("DISABLE_AUTHENTICATION", true);
@@ -173,7 +176,7 @@ define("LOGIN_REQUIRED", false);
 \$config['DB_PATH'] = '/config/barcodebuddy.db';
 \$config['API_KEY'] = '';
 
-// NEU: Grocy-Ingress-Integration Einstellungen
+// Grocy-Integration Einstellungen v1.1.9
 \$config['GROCY_API_URL'] = '$GROCY_API_URL';
 \$config['GROCY_API_KEY'] = '$GROCY_API_KEY';
 \$config['GROCY_BASE_URL'] = '$GROCY_BASE_URL';
@@ -200,21 +203,19 @@ if (getenv('DEBUG_MODE') === 'true') {
 ?>
 BBCONFIG
 
-echo "✅ Barcode Buddy Config mit Grocy-Ingress-Integration erstellt"
+echo "✅ Barcode Buddy Config mit Grocy-Integration v1.1.9 erstellt"
 
-# Grocy-Verbindung testen (Ingress-kompatibel)
+# Grocy-Verbindung testen (Syntax korrigiert)
 if [ -n "$GROCY_API_KEY" ] && [ "$GROCY_API_KEY" != "" ]; then
     echo ""
-    echo "🔗 Teste Grocy-Verbindung (Ingress-Support)..."
+    echo "🔗 Teste Grocy-Verbindung (v1.1.9)..."
     
-    # Test Grocy-API mit Ingress-spezifischen Headern
-    if echo "$GROCY_SERVER_URL" | grep -q "hassio/ingress"; then
+    if [ "$USE_INGRESS" = "true" ]; then
         echo "📡 Teste Ingress-API: $GROCY_API_URL"
-        # Für Ingress-URLs können spezielle Header erforderlich sein
-        GROCY_TEST=$(curl -s -H "GROCY-API-KEY: $GROCY_API_KEY" -H "Accept: application/json" "$GROCY_API_URL/system/info" 2>/dev/null)
+        GROCY_TEST=$(curl -s -H "GROCY-API-KEY: $GROCY_API_KEY" -H "Accept: application/json" "${GROCY_API_URL}system/info" 2>/dev/null)
     else
         echo "📡 Teste Standard-API: $GROCY_API_URL"
-        GROCY_TEST=$(curl -s -H "GROCY-API-KEY: $GROCY_API_KEY" "$GROCY_API_URL/system/info" 2>/dev/null)
+        GROCY_TEST=$(curl -s -H "GROCY-API-KEY: $GROCY_API_KEY" "${GROCY_API_URL}system/info" 2>/dev/null)
     fi
     
     if echo "$GROCY_TEST" | grep -q "grocy_version\|version"; then
@@ -222,7 +223,7 @@ if [ -n "$GROCY_API_KEY" ] && [ "$GROCY_API_KEY" != "" ]; then
         GROCY_VERSION=$(echo "$GROCY_TEST" | grep -o '"grocy_version":"[^"]*"' | cut -d'"' -f4)
         echo "📦 Grocy Version: $GROCY_VERSION"
         
-        if echo "$GROCY_SERVER_URL" | grep -q "hassio/ingress"; then
+        if [ "$USE_INGRESS" = "true" ]; then
             echo "🔗 Ingress-Integration aktiv"
         fi
     else
@@ -230,11 +231,10 @@ if [ -n "$GROCY_API_KEY" ] && [ "$GROCY_API_KEY" != "" ]; then
         echo "💡 Prüfen Sie:"
         echo "   - Grocy läuft und ist erreichbar"
         echo "   - API-Key ist korrekt"
-        echo "   - Ingress-URL ist vollständig"
+        echo "   - URL ist vollständig: $GROCY_SERVER_URL"
         echo ""
-        echo "🔧 Debug-Tests:"
-        echo "   curl -I \"$GROCY_SERVER_URL\""
-        echo "   curl -H \"GROCY-API-KEY: $GROCY_API_KEY\" \"$GROCY_API_URL/system/info\""
+        echo "🔧 Debug-Test:"
+        echo "   curl -H \"GROCY-API-KEY: $GROCY_API_KEY\" \"${GROCY_API_URL}system/info\""
     fi
 else
     echo "⚠️  Kein Grocy API-Key konfiguriert"
@@ -242,7 +242,7 @@ else
     echo "🔗 Ihre Grocy-URL: $GROCY_SERVER_URL"
 fi
 
-# Authentication-Fix (wie vorher)
+# Authentication-Fix
 echo ""
 echo "🔐 Konfiguriere Authentication..."
 
@@ -257,7 +257,7 @@ rm -f /tmp/sess_* /var/lib/php/sessions/sess_* 2>/dev/null || true
 echo "Erstelle Web-Interface-Monitor..."
 cat > /usr/local/bin/web-monitor.sh << 'EOF'
 #!/bin/bash
-# Web-Interface Monitor v1.1.8 mit Grocy-Ingress-Überwachung
+# Web-Interface Monitor v1.1.9
 
 sleep 10
 
@@ -286,12 +286,12 @@ chmod +x /usr/local/bin/web-monitor.sh
 # Umgebungsvariablen setzen
 export ATTACH_BARCODESCANNER=true
 export SCANNER_DEVICE="$SCANNER_DEVICE"
-export GROCY_API_URL="$GROCY_SERVER_URL/api/"
+export GROCY_API_URL="$GROCY_API_URL"
 export GROCY_API_KEY="$GROCY_API_KEY"
 
 echo ""
-echo "🚀 Starte Barcode Buddy System v1.1.8..."
-echo "📊 Grocy-Integration: $([[ -n "$GROCY_API_KEY" ]] && echo "Aktiviert (Ingress)" || echo "API-Key erforderlich")"
+echo "🚀 Starte Barcode Buddy System v1.1.9..."
+echo "📊 Grocy-Integration: $([[ -n "$GROCY_API_KEY" ]] && echo "Aktiviert (v1.1.9)" || echo "API-Key erforderlich")"
 echo "🔗 Grocy-URL: $GROCY_SERVER_URL"
 
 # Web-Monitor im Hintergrund starten
