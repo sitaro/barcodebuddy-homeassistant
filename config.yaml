@@ -1,5 +1,5 @@
 name: "Barcode Buddy USB Scanner"
-version: "1.0.3"
+version: "1.0.7"
 slug: "barcodebuddy-usb"
 description: "Barcode Buddy with USB scanner support"
 arch:
