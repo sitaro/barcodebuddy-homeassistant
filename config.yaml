@@ -1,7 +1,7 @@
 name: "Barcode Buddy USB Scanner"
-version: "1.2.1"
+version: "1.2.3"
 slug: "barcodebuddy-usb"
-description: "Barcode Buddy with USB scanner support, Grocy integration (pre-configured)"
+description: "Barcode Buddy with USB scanner support, Grocy integration (robust config)"
 arch:
   - armhf
   - armv7
@@ -41,29 +41,35 @@ ingress: true
 ingress_port: 80
 ingress_entry: "/"
 
-# Benutzer-konfigurierbare Optionen - ERWEITERT für Grocy
+# Benutzer-konfigurierbare Optionen
 options:
+  # Scanner-Konfiguration
+  scanner_device: "/dev/input/event3"
+  debug: true
+  
+  # Authentication
   require_api_key: false
   disable_auth: true
-  debug: true
+  
+  # SSL/TLS
   curl_allow_insecure_ssl_ca: false
   curl_allow_insecure_ssl_host: false
-  scanner_device: "/dev/input/event3"
-  # Grocy-Integration (Ihre Zugangsdaten)
-  grocy_server_url: "http://ha.mathops.de:8123/hassio/ingress/a0d7b954_grocy"
-  grocy_api_key: "SgEQWmOYXJvyweDV9qnhI9tZGjrW4BVxaQXSYbiLZvVfmEJeNy"
-  grocy_username: "mathias"
+  
+  # Grocy-Integration (KONFIGURIERBAR!)
+  grocy_server_url: ""  # Leer lassen für Auto-Config
+  grocy_api_key: ""     # Leer lassen für Auto-Config
+  grocy_username: "admin"
   auto_setup_grocy: true
   use_ingress: true
 
-# Schema für Validierung - ERWEITERT
+# Schema für Validierung
 schema:
+  scanner_device: str
+  debug: bool
   require_api_key: bool
   disable_auth: bool
-  debug: bool
   curl_allow_insecure_ssl_ca: bool
   curl_allow_insecure_ssl_host: bool
-  scanner_device: str
   grocy_server_url: str
   grocy_api_key: str
   grocy_username: str
