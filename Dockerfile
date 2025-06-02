@@ -1,9 +1,9 @@
-# Dockerfile - Scanner-Patch für MINJCODE MJ2818A v1.1.3
+# Dockerfile - Scanner-Patch für MINJCODE MJ2818A v1.1.5
 FROM f0rc3/barcodebuddy:latest
 
 # Home Assistant Add-on Labels
 LABEL \
-    io.hass.version="1.1.4" \
+    io.hass.version="1.1.5" \
     io.hass.type="addon" \
     io.hass.arch="armhf|armv7|aarch64|amd64|i386"
 

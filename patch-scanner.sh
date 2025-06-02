@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# patch-scanner.sh v1.1.4 - Konsistente Version mit config.yaml
+# patch-scanner.sh v1.1.5 - Exec Fix für MINJCODE Scanner
 
-echo "=== Barcode Buddy Scanner-Patch v1.1.4 ==="
+echo "=== Barcode Buddy Scanner-Patch v1.1.5 ==="
 
 # Debug-Modus aus Konfiguration
 DEBUG_MODE="false"
@@ -14,71 +14,23 @@ if [ -f "$CONFIG_PATH" ]; then
     fi
 fi
 
-# Debug-Informationen
-if [ "$DEBUG_MODE" = "true" ]; then
-    echo "=== DEBUG-INFORMATIONEN v1.1.4 ==="
-    echo "Host /dev/input Status:"
-    ls -la /dev/input/ 2>/dev/null || echo "Kein /dev/input Verzeichnis"
-    echo "Container-Prozesse:"
-    ps aux 2>/dev/null | head -5 || ps | head -5
-    echo "Konfigurationsdatei:"
-    cat "$CONFIG_PATH" 2>/dev/null || echo "Keine Konfiguration"
-    echo "================================"
-fi
-
-# Prüfen ob /dev/input/ existiert
-if [ ! -d "/dev/input/" ]; then
-    echo "PROBLEM: /dev/input/ Verzeichnis nicht verfügbar!"
-    echo ""
-    echo "LÖSUNGSSCHRITTE:"
-    echo "1. Add-on stoppen"
-    echo "2. Home Assistant neu starten" 
-    echo "3. Scanner-Hardware prüfen"
-    echo "4. Add-on neu starten"
-    echo ""
-    echo "Läufe im SIMULATION-MODUS..."
-    SCANNER_DEVICE="/dev/null"
-else
-    echo "✓ /dev/input/ Verzeichnis verfügbar"
+# Scanner-Gerät aus Konfiguration lesen
+SCANNER_DEVICE="/dev/input/event2"
+if [ -f "$CONFIG_PATH" ]; then
+    CONFIGURED_DEVICE=$(grep -o '"scanner_device"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_PATH" 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' | head -1)
     
-    # Verfügbare Geräte anzeigen
-    echo "Verfügbare Input-Geräte:"
-    ls -la /dev/input/event* 2>/dev/null || echo "Keine event-Geräte"
-    
-    # Scanner-Gerät aus Konfiguration lesen
-    SCANNER_DEVICE="/dev/input/event2"  # Standard für MINJCODE Scanner
-    
-    if [ -f "$CONFIG_PATH" ]; then
-        CONFIGURED_DEVICE=$(grep -o '"scanner_device"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_PATH" 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' | head -1)
-        
-        if [ -n "$CONFIGURED_DEVICE" ] && [ "$CONFIGURED_DEVICE" != "null" ]; then
-            SCANNER_DEVICE="$CONFIGURED_DEVICE"
-            echo "Verwende konfiguriertes Scanner-Gerät: $SCANNER_DEVICE"
-        fi
-    fi
-    
-    # Automatische Scanner-Erkennung falls konfiguriertes Gerät nicht existiert
-    if [ ! -e "$SCANNER_DEVICE" ]; then
-        echo "Konfiguriertes Gerät $SCANNER_DEVICE nicht gefunden"
-        echo "Starte automatische Scanner-Erkennung..."
-        
-        for device in /dev/input/event*; do
-            if [ -e "$device" ]; then
-                echo "Verwende verfügbares Gerät: $device"
-                SCANNER_DEVICE="$device"
-                break
-            fi
-        done
+    if [ -n "$CONFIGURED_DEVICE" ] && [ "$CONFIGURED_DEVICE" != "null" ]; then
+        SCANNER_DEVICE="$CONFIGURED_DEVICE"
     fi
 fi
 
 echo "Scanner-Gerät: $SCANNER_DEVICE"
 
-# grabInput.sh patchen
+# grabInput.sh analysieren und reparieren
 GRAB_SCRIPT="/app/bbuddy/example/grabInput.sh"
 
 if [ -f "$GRAB_SCRIPT" ]; then
-    echo "Patche grabInput.sh..."
+    echo "Analysiere grabInput.sh..."
     
     # Backup erstellen (nur einmal)
     if [ ! -f "${GRAB_SCRIPT}.original" ]; then
@@ -86,68 +38,101 @@ if [ -f "$GRAB_SCRIPT" ]; then
         echo "Original-Skript gesichert"
     fi
     
-    # Stabilen Wrapper erstellen
-    cat > "$GRAB_SCRIPT" << EOF
+    # Original-Skript analysieren
+    if [ "$DEBUG_MODE" = "true" ]; then
+        echo "=== ORIGINAL-SKRIPT ANALYSE ==="
+        echo "Dateigröße: $(wc -c < "${GRAB_SCRIPT}.original") bytes"
+        echo "Erste Zeilen:"
+        head -3 "${GRAB_SCRIPT}.original" 2>/dev/null || echo "Kann nicht gelesen werden"
+        echo "Berechtigungen:"
+        ls -la "${GRAB_SCRIPT}.original"
+        echo "Dateityp:"
+        file "${GRAB_SCRIPT}.original" 2>/dev/null || echo "file-Befehl nicht verfügbar"
+        echo "================================"
+    fi
+    
+    # Berechtigungen reparieren
+    chmod +x "${GRAB_SCRIPT}.original" 2>/dev/null
+    
+    # Korrigierten Wrapper erstellen (Original-Skript funktioniert!)
+    cat > "$GRAB_SCRIPT" << 'EOF'
 #!/bin/bash
-# Scanner-Wrapper v1.1.4 - MINJCODE MJ2818A Support
+# Korrigierter Scanner-Wrapper v1.1.5 - Exec Fix
 
-echo "Scanner-Wrapper v1.1.4 gestartet"
+echo "Scanner-Wrapper v1.1.5 gestartet (Exec Fix)"
 
 # Hardware-Check
 if [ ! -d "/dev/input/" ]; then
     echo "SIMULATION: Keine Hardware-Scanner verfügbar"
-    echo "Web-Interface läuft auf Port 8083"
     
-    # Stabiler Dummy-Prozess
     while true; do
         sleep 60
-        echo "\$(date +%H:%M): Scanner-Simulation aktiv"
+        echo "$(date +%H:%M): Scanner-Simulation aktiv"
     done
     exit 0
 fi
 
 # Scanner-Gerät bestimmen
-DEVICE="$SCANNER_DEVICE"
+DEVICE="/dev/input/event2"  # Standard für MINJCODE
 
 # Argument-Override
-if [ "\$1" != "" ] && [ -e "\$1" ]; then
-    DEVICE="\$1"
-    echo "Verwende Argument-Gerät: \$DEVICE"
+if [ "$1" != "" ] && [ -e "$1" ]; then
+    DEVICE="$1"
+    echo "Verwende Argument-Gerät: $DEVICE"
 fi
 
 # Fallback-Suche
-if [ ! -e "\$DEVICE" ]; then
-    echo "Gerät \$DEVICE nicht verfügbar, suche Alternativen..."
+if [ ! -e "$DEVICE" ]; then
+    echo "Gerät $DEVICE nicht verfügbar, suche Alternativen..."
     
     for candidate in /dev/input/event*; do
-        if [ -e "\$candidate" ]; then
-            DEVICE="\$candidate"
-            echo "Auto-Erkennung: \$DEVICE"
+        if [ -e "$candidate" ]; then
+            DEVICE="$candidate"
+            echo "Auto-Erkennung: $DEVICE"
             break
         fi
     done
 fi
 
-# Scanner starten
-if [ -e "\$DEVICE" ] && [ "\$DEVICE" != "/dev/null" ]; then
-    echo "🔍 Starte MINJCODE Scanner: \$DEVICE"
-    echo "Scanner bereit für Barcodes..."
-    exec ${GRAB_SCRIPT}.original "\$DEVICE"
-else
+# Gerät validieren
+if [ ! -e "$DEVICE" ] || [ "$DEVICE" = "/dev/null" ]; then
     echo "⚠️  Hardware-Scanner nicht verfügbar"
     echo "💻 Web-Interface verfügbar auf Port 8083"
-    echo "📱 Handy-App oder manuelle Eingabe verwenden"
     
-    # Dummy-Prozess (verhindert Absturz-Schleifen)
     while true; do
         sleep 60
-        echo "\$(date +%H:%M): Warte auf Hardware-Scanner..."
+        echo "$(date +%H:%M): Warte auf Hardware-Scanner..."
+    done
+    exit 0
+fi
+
+echo "🔍 MINJCODE Scanner bereit: $DEVICE"
+
+# Original-Skript (absoluter Pfad für sicheren Exec)
+ORIGINAL_SCRIPT="/app/bbuddy/example/grabInput.sh.original"
+
+if [ -f "$ORIGINAL_SCRIPT" ]; then
+    chmod +x "$ORIGINAL_SCRIPT"
+    echo "✅ Starte Original-Scanner für: $DEVICE"
+    echo "[ScannerConnection] Erwartet Scanner-Input..."
+    
+    # KORRIGIERTER EXEC-AUFRUF - Absolute Pfade verwenden
+    exec "$ORIGINAL_SCRIPT" "$DEVICE"
+else
+    echo "❌ Original-Skript nicht gefunden: $ORIGINAL_SCRIPT"
+    
+    # Fallback
+    while true; do
+        if [ -e "$DEVICE" ]; then
+            echo "$(date +%H:%M:%S): Fallback-Scanner aktiv auf $DEVICE"
+        fi
+        sleep 60
     done
 fi
 EOF
     
     chmod +x "$GRAB_SCRIPT"
-    echo "✓ Scanner-Wrapper v1.1.4 installiert"
+    echo "✅ Korrigierter Scanner-Wrapper v1.1.5 installiert"
     
 else
     echo "⚠️  grabInput.sh nicht gefunden bei $GRAB_SCRIPT"
@@ -158,7 +143,7 @@ export ATTACH_BARCODESCANNER=true
 export SCANNER_DEVICE="$SCANNER_DEVICE"
 
 echo ""
-echo "🚀 Starte Barcode Buddy System v1.1.4..."
+echo "🚀 Starte Barcode Buddy System v1.1.5..."
 
 # Original-Supervisor starten
 if [ -f "/app/supervisor" ]; then
