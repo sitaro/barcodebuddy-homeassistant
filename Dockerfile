@@ -9,3 +9,10 @@ LABEL \
 
 # USB-Scanner aktivieren (event4 wird automatisch verwendet)
 ENV ATTACH_BARCODESCANNER=true
+
+# Startup-Skript hinzufügen das die Home Assistant Konfiguration liest
+COPY run.sh /usr/local/bin/run.sh
+RUN chmod +x /usr/local/bin/run.sh
+
+# Unser eigenes Startup-Skript verwenden
+CMD ["/usr/local/bin/run.sh"]
