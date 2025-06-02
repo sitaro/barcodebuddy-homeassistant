@@ -1,7 +1,7 @@
 name: "Barcode Buddy USB Scanner"
-version: "1.1.6"
+version: "1.1.8"
 slug: "barcodebuddy-usb"
-description: "Barcode Buddy with USB scanner support"
+description: "Barcode Buddy with USB scanner support and Grocy ingress integration"
 arch:
   - armhf
   - armv7
@@ -12,7 +12,7 @@ startup: application
 boot: auto
 init: false
 
-# USB-Geräte einzeln mappen (sicherer als privileged)
+# USB-Geräte einzeln mappen
 devices:
   - "/dev/input/event0:/dev/input/event0:rwm"
   - "/dev/input/event1:/dev/input/event1:rwm"
@@ -31,20 +31,17 @@ map:
   - "config:rw"
   - "ssl"
 
-# PORT-FIX: Explizite Port-Konfiguration
+# PORT-Konfiguration
 ports:
   "80/tcp": 8083
 
-# Web UI Konfiguration - Ingress Fix
+# Web UI Konfiguration
 webui: "http://[HOST]:[PORT:80]"
 ingress: true
 ingress_port: 80
-ingress_entry: "/"  # NEU: Expliziter Ingress-Entry-Point
+ingress_entry: "/"
 
-# Host-Netzwerk als Fallback (falls Port-Mapping Probleme)
-# host_network: false  # Auskommentiert - nur aktivieren falls nötig
-
-# Benutzer-konfigurierbare Optionen
+# Benutzer-konfigurierbare Optionen - ERWEITERT für Grocy
 options:
   require_api_key: false
   disable_auth: true
@@ -52,8 +49,14 @@ options:
   curl_allow_insecure_ssl_ca: false
   curl_allow_insecure_ssl_host: false
   scanner_device: "/dev/input/event2"
+  # NEU: Grocy-Integration (Ingress-Support)
+  grocy_server_url: "http://ha.mathops.de:8123/hassio/ingress/a0d7b954_grocy"
+  grocy_api_key: ""
+  grocy_username: "admin"
+  auto_setup_grocy: true
+  use_ingress: true
 
-# Schema für Validierung
+# Schema für Validierung - ERWEITERT
 schema:
   require_api_key: bool
   disable_auth: bool
@@ -61,3 +64,8 @@ schema:
   curl_allow_insecure_ssl_ca: bool
   curl_allow_insecure_ssl_host: bool
   scanner_device: str
+  grocy_server_url: str
+  grocy_api_key: str
+  grocy_username: str
+  auto_setup_grocy: bool
+  use_ingress: bool
