@@ -1,5 +1,5 @@
 name: "Barcode Buddy USB Scanner"
-version: "1.1.5"
+version: "1.1.6"
 slug: "barcodebuddy-usb"
 description: "Barcode Buddy with USB scanner support"
 arch:
@@ -31,12 +31,18 @@ map:
   - "config:rw"
   - "ssl"
 
+# PORT-FIX: Explizite Port-Konfiguration
 ports:
   "80/tcp": 8083
 
+# Web UI Konfiguration - Ingress Fix
 webui: "http://[HOST]:[PORT:80]"
 ingress: true
-ingress_port: 0
+ingress_port: 80
+ingress_entry: "/"  # NEU: Expliziter Ingress-Entry-Point
+
+# Host-Netzwerk als Fallback (falls Port-Mapping Probleme)
+# host_network: false  # Auskommentiert - nur aktivieren falls nötig
 
 # Benutzer-konfigurierbare Optionen
 options:
