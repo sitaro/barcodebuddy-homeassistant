@@ -1,96 +1,142 @@
-#!/usr/bin/with-contenv bashio
+#!/bin/bash
 
-# run.sh - Home Assistant Add-on Startup-Skript für Barcode Buddy
+# run.sh - Minimales Startup-Skript für Barcode Buddy Add-on
 
-bashio::log.info "Starte Barcode Buddy USB Scanner Add-on..."
+echo "=== Barcode Buddy USB Scanner Add-on startet ==="
 
-# Lese die Konfiguration aus Home Assistant
+# Standard-Werte
+SCANNER_DEVICE="/dev/input/event0"
+DEBUG="false"
+
+# Home Assistant Add-on Konfiguration lesen
 CONFIG_PATH="/data/options.json"
 
-# Prüfe ob Konfigurationsdatei existiert
-if [ ! -f "$CONFIG_PATH" ]; then
-    bashio::log.warning "Keine Konfigurationsdatei gefunden, verwende Standard-Werte"
-    SCANNER_DEVICE="/dev/input/event0"
-else
-    # Lese scanner_device aus der Konfiguration
-    SCANNER_DEVICE=$(bashio::config 'scanner_device')
+if [ -f "$CONFIG_PATH" ]; then
+    echo "Konfigurationsdatei gefunden: $CONFIG_PATH"
     
-    # Fallback auf Standard-Wert falls nicht konfiguriert
-    if [ -z "$SCANNER_DEVICE" ] || [ "$SCANNER_DEVICE" = "null" ]; then
-        SCANNER_DEVICE="/dev/input/event0"
-        bashio::log.info "Kein Scanner-Gerät konfiguriert, verwende Standard: $SCANNER_DEVICE"
-    else
-        bashio::log.info "Verwende konfiguriertes Scanner-Gerät: $SCANNER_DEVICE"
+    # Scanner-Gerät extrahieren (ohne jq, nur mit grep/sed)
+    CONFIGURED_DEVICE=$(grep -o '"scanner_device"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_PATH" 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' | head -1)
+    
+    if [ -n "$CONFIGURED_DEVICE" ] && [ "$CONFIGURED_DEVICE" != "null" ]; then
+        SCANNER_DEVICE="$CONFIGURED_DEVICE"
+        echo "Verwende konfiguriertes Scanner-Gerät: $SCANNER_DEVICE"
     fi
+    
+    # Debug-Modus prüfen
+    if grep -q '"debug"[[:space:]]*:[[:space:]]*true' "$CONFIG_PATH" 2>/dev/null; then
+        DEBUG="true"
+    fi
+else
+    echo "Keine Konfigurationsdatei gefunden, verwende Standard: $SCANNER_DEVICE"
 fi
 
-# Prüfe ob das Scanner-Gerät existiert
+# Debug-Ausgaben
+if [ "$DEBUG" = "true" ]; then
+    echo "=== DEBUG-INFORMATIONEN ==="
+    echo "Aktuelles Verzeichnis: $(pwd)"
+    echo "Scanner-Gerät: $SCANNER_DEVICE"
+    echo "Verfügbare /dev/input Geräte:"
+    ls -la /dev/input/ 2>/dev/null || echo "Keine /dev/input Geräte"
+    echo "Konfiguration:"
+    cat "$CONFIG_PATH" 2>/dev/null || echo "Keine Konfigurationsdatei"
+    echo "Umgebungsvariablen:"
+    env | grep -i barcode || echo "Keine BARCODE-Variablen"
+    echo "==========================="
+fi
+
+# Verfügbarkeit des Scanner-Geräts prüfen
 if [ ! -e "$SCANNER_DEVICE" ]; then
-    bashio::log.warning "Scanner-Gerät $SCANNER_DEVICE nicht gefunden!"
-    bashio::log.info "Verfügbare Input-Geräte:"
-    ls -la /dev/input/event* 2>/dev/null || bashio::log.warning "Keine Input-Geräte gefunden"
+    echo "WARNUNG: Scanner-Gerät $SCANNER_DEVICE nicht gefunden!"
+    echo "Suche nach verfügbaren Alternativen..."
     
-    # Versuche automatische Erkennung
-    bashio::log.info "Versuche automatische Geräteerkennung..."
+    # Erstes verfügbares event-Gerät finden
     for device in /dev/input/event*; do
         if [ -e "$device" ]; then
-            bashio::log.info "Gefunden: $device"
+            echo "Verwende alternatives Gerät: $device"
             SCANNER_DEVICE="$device"
             break
         fi
     done
+    
+    if [ ! -e "$SCANNER_DEVICE" ]; then
+        echo "FEHLER: Kein Input-Gerät verfügbar!"
+        echo "Verfügbare Geräte:"
+        ls -la /dev/input/ 2>/dev/null || echo "Keine Geräte in /dev/input"
+        exit 1
+    fi
 fi
 
-# Weitere Konfigurationsoptionen lesen
-DEBUG=$(bashio::config 'debug')
-REQUIRE_API_KEY=$(bashio::config 'require_api_key')
-DISABLE_AUTH=$(bashio::config 'disable_auth')
-
-# Debug-Informationen ausgeben
-if [ "$DEBUG" = "true" ]; then
-    bashio::log.info "=== DEBUG-INFORMATIONEN ==="
-    bashio::log.info "Scanner-Gerät: $SCANNER_DEVICE"
-    bashio::log.info "Debug aktiviert: $DEBUG"
-    bashio::log.info "API-Key erforderlich: $REQUIRE_API_KEY"
-    bashio::log.info "Authentifizierung deaktiviert: $DISABLE_AUTH"
-    bashio::log.info "Umgebungsvariablen:"
-    env | grep -E "(ATTACH_|BARCODE|SCANNER)" || true
-    bashio::log.info "==========================="
-fi
-
-# Umgebungsvariablen für Barcode Buddy setzen
+# Umgebungsvariablen setzen
 export ATTACH_BARCODESCANNER=true
 export SCANNER_DEVICE="$SCANNER_DEVICE"
 
-# Original-Entrypoint finden und ausführen
-ORIGINAL_ENTRYPOINT="/init"
+echo "Finale Konfiguration:"
+echo "- Scanner-Gerät: $SCANNER_DEVICE"
+echo "- ATTACH_BARCODESCANNER: $ATTACH_BARCODESCANNER"
 
-if [ -f "$ORIGINAL_ENTRYPOINT" ]; then
-    bashio::log.info "Starte Barcode Buddy mit Scanner-Gerät: $SCANNER_DEVICE"
+# Finde das grabInput.sh Skript
+GRAB_INPUT_SCRIPT=""
+for path in \
+    "/app/barcodebuddy/grabInput.sh" \
+    "/opt/barcodebuddy/grabInput.sh" \
+    "/usr/local/bin/grabInput.sh" \
+    "$(find / -name "grabInput.sh" 2>/dev/null | head -1)"; do
     
-    # Prüfe ob grabInput.sh existiert und modifiziere es falls nötig
-    if [ -f "/app/barcodebuddy/grabInput.sh" ]; then
-        # Erstelle eine Wrapper-Funktion die das Gerät automatisch übergibt
-        cat > /usr/local/bin/grabInput-wrapper.sh << EOF
+    if [ -f "$path" ]; then
+        GRAB_INPUT_SCRIPT="$path"
+        echo "grabInput.sh gefunden: $GRAB_INPUT_SCRIPT"
+        break
+    fi
+done
+
+# Wrapper für grabInput.sh erstellen (falls das Skript gefunden wurde)
+if [ -n "$GRAB_INPUT_SCRIPT" ]; then
+    echo "Erstelle Wrapper für grabInput.sh..."
+    
+    # Original sichern
+    cp "$GRAB_INPUT_SCRIPT" "${GRAB_INPUT_SCRIPT}.original" 2>/dev/null || true
+    
+    # Neuen Wrapper erstellen
+    cat > "$GRAB_INPUT_SCRIPT" << EOF
 #!/bin/bash
-# Wrapper für grabInput.sh mit automatischer Geräteerkennung
-if [ -n "$SCANNER_DEVICE" ] && [ -e "$SCANNER_DEVICE" ]; then
-    exec /app/barcodebuddy/grabInput.sh "$SCANNER_DEVICE" "\$@"
+# Automatischer Wrapper für grabInput.sh
+echo "Wrapper aufgerufen mit Argumenten: \$@"
+
+# Verwende konfiguriertes Gerät
+DEVICE="$SCANNER_DEVICE"
+
+# Falls als Argument übergeben, verwende das
+if [ "\$1" != "" ] && [ -e "\$1" ]; then
+    DEVICE="\$1"
+fi
+
+if [ -e "\$DEVICE" ]; then
+    echo "Starte Input-Grabber für: \$DEVICE"
+    exec "${GRAB_INPUT_SCRIPT}.original" "\$DEVICE"
 else
-    echo "Fehler: Scanner-Gerät $SCANNER_DEVICE nicht verfügbar"
+    echo "FEHLER: Gerät \$DEVICE nicht verfügbar!"
+    echo "Verfügbare Geräte:"
+    ls -la /dev/input/event* 2>/dev/null || echo "Keine event-Geräte"
     exit 1
 fi
 EOF
-        chmod +x /usr/local/bin/grabInput-wrapper.sh
-        
-        # Ersetze grabInput.sh durch unseren Wrapper
-        mv /app/barcodebuddy/grabInput.sh /app/barcodebuddy/grabInput-original.sh
-        ln -sf /usr/local/bin/grabInput-wrapper.sh /app/barcodebuddy/grabInput.sh
-    fi
     
-    # Starte das Original-System
-    exec "$ORIGINAL_ENTRYPOINT"
+    chmod +x "$GRAB_INPUT_SCRIPT"
+    echo "Wrapper erstellt und aktiviert"
 else
-    bashio::log.error "Original-Entrypoint $ORIGINAL_ENTRYPOINT nicht gefunden!"
-    exit 1
+    echo "WARNUNG: grabInput.sh nicht gefunden - Scanner-Funktionalität eventuell eingeschränkt"
 fi
+
+# Original-Entrypoint suchen und starten
+echo "Suche Original-Entrypoint..."
+for entrypoint in "/init" "/usr/local/bin/docker-entrypoint.sh" "/entrypoint.sh"; do
+    if [ -f "$entrypoint" ]; then
+        echo "Starte Original-System: $entrypoint"
+        exec "$entrypoint"
+    fi
+done
+
+echo "FEHLER: Kein Original-Entrypoint gefunden!"
+echo "Verfügbare Dateien in /:"
+ls -la / | head -20
+exit 1
