@@ -1,19 +1,19 @@
 #!/bin/bash
 
-# patch-scanner.sh v1.2.0 - Scanner-Device event3 Fix
+# patch-scanner.sh v1.2.1 - Vollständig konfiguriert mit Grocy-Zugangsdaten
 
-echo "=== Barcode Buddy Scanner-Patch v1.2.0 (Scanner-Device event3 Fix) ==="
+echo "=== Barcode Buddy Scanner-Patch v1.2.1 (Vollständig konfiguriert) ==="
 
 # Debug-Modus und Konfiguration lesen
 DEBUG_MODE="false"
 CONFIG_PATH="/data/options.json"
 
-# Grocy-Einstellungen (Standard-Werte mit korrekter URL)
+# Grocy-Einstellungen (Ihre korrekten Zugangsdaten)
 GROCY_SERVER_URL="http://ha.mathops.de:8123/hassio/ingress/a0d7b954_grocy"
-GROCY_API_KEY=""
-GROCY_USERNAME="admin"
+GROCY_API_KEY="SgEQWmOYXJvyweDV9qnhI9tZGjrW4BVxaQXSYbiLZvVfmEJeNy"
+GROCY_USERNAME="mathias"
 AUTO_SETUP_GROCY="true"
-USE_INGRESS="false"
+USE_INGRESS="true"
 
 if [ -f "$CONFIG_PATH" ]; then
     if grep -q '"debug"[[:space:]]*:[[:space:]]*true' "$CONFIG_PATH" 2>/dev/null; then
@@ -73,9 +73,9 @@ if [ -f "$GRAB_SCRIPT" ]; then
     
     cat > "$GRAB_SCRIPT" << 'EOF'
 #!/bin/bash
-# Scanner-Wrapper v1.2.0 - Scanner-Device event3 Fix
+# Scanner-Wrapper v1.2.1 - Vollständig konfiguriert
 
-echo "Scanner-Wrapper v1.2.0 gestartet (Scanner-Device event3)"
+echo "Scanner-Wrapper v1.2.1 gestartet (Vollständig konfiguriert)"
 
 # Hardware-Check
 if [ ! -d "/dev/input/" ]; then
@@ -134,7 +134,7 @@ fi
 EOF
     
     chmod +x "$GRAB_SCRIPT"
-    echo "✅ Scanner-Wrapper v1.2.0 installiert"
+    echo "✅ Scanner-Wrapper v1.2.1 installiert"
 else
     echo "⚠️  grabInput.sh nicht gefunden"
 fi
@@ -161,8 +161,8 @@ BB_CONFIG="/app/bbuddy/config.php"
 
 cat > "$BB_CONFIG" << BBCONFIG
 <?php
-// Barcode Buddy Config - Home Assistant Add-on v1.2.0
-// Authentication deaktiviert + Grocy-Ingress-Integration + Scanner-Device event3
+// Barcode Buddy Config - Home Assistant Add-on v1.2.1
+// Vollständig konfiguriert: Authentication deaktiviert + Grocy-Integration + Scanner event3
 
 define("DISABLE_AUTHENTICATION", true);
 define("LOGIN_REQUIRED", false);
@@ -203,12 +203,12 @@ if (getenv('DEBUG_MODE') === 'true') {
 ?>
 BBCONFIG
 
-echo "✅ Barcode Buddy Config mit Grocy-Integration v1.2.0 erstellt"
+echo "✅ Barcode Buddy Config mit Grocy-Integration v1.2.1 erstellt"
 
 # Grocy-Verbindung testen (Syntax korrigiert)
 if [ -n "$GROCY_API_KEY" ] && [ "$GROCY_API_KEY" != "" ]; then
     echo ""
-    echo "🔗 Teste Grocy-Verbindung (v1.2.0)..."
+    echo "🔗 Teste Grocy-Verbindung (v1.2.1 mit API-Key)..."
     
     if [ "$USE_INGRESS" = "true" ]; then
         echo "📡 Teste Ingress-API: $GROCY_API_URL"
@@ -257,7 +257,7 @@ rm -f /tmp/sess_* /var/lib/php/sessions/sess_* 2>/dev/null || true
 echo "Erstelle Web-Interface-Monitor..."
 cat > /usr/local/bin/web-monitor.sh << 'EOF'
 #!/bin/bash
-# Web-Interface Monitor v1.2.0
+# Web-Interface Monitor v1.2.1
 
 sleep 10
 
@@ -290,9 +290,10 @@ export GROCY_API_URL="$GROCY_API_URL"
 export GROCY_API_KEY="$GROCY_API_KEY"
 
 echo ""
-echo "🚀 Starte Barcode Buddy System v1.2.0..."
-echo "📊 Grocy-Integration: $([[ -n "$GROCY_API_KEY" ]] && echo "Aktiviert (v1.2.0)" || echo "API-Key erforderlich")"
+echo "🚀 Starte Barcode Buddy System v1.2.1..."
+echo "📊 Grocy-Integration: $([[ -n "$GROCY_API_KEY" ]] && echo "Aktiviert (v1.2.1 - vollständig konfiguriert)" || echo "API-Key erforderlich")"
 echo "🎯 Scanner-Device: $SCANNER_DEVICE (event3)"
+echo "👤 Grocy-User: $GROCY_USERNAME"
 echo "🔗 Grocy-URL: $GROCY_SERVER_URL"
 
 # Web-Monitor im Hintergrund starten

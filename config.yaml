@@ -1,7 +1,7 @@
 name: "Barcode Buddy USB Scanner"
-version: "1.2.0"
+version: "1.2.1"
 slug: "barcodebuddy-usb"
-description: "Barcode Buddy with USB scanner support and Grocy ingress integration"
+description: "Barcode Buddy with USB scanner support, Grocy integration (pre-configured)"
 arch:
   - armhf
   - armv7
@@ -49,10 +49,10 @@ options:
   curl_allow_insecure_ssl_ca: false
   curl_allow_insecure_ssl_host: false
   scanner_device: "/dev/input/event3"
-  # NEU: Grocy-Integration (Ingress-Support)
+  # Grocy-Integration (Ihre Zugangsdaten)
   grocy_server_url: "http://ha.mathops.de:8123/hassio/ingress/a0d7b954_grocy"
-  grocy_api_key: ""
-  grocy_username: "admin"
+  grocy_api_key: "SgEQWmOYXJvyweDV9qnhI9tZGjrW4BVxaQXSYbiLZvVfmEJeNy"
+  grocy_username: "mathias"
   auto_setup_grocy: true
   use_ingress: true
 
