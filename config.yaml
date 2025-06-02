@@ -12,17 +12,12 @@ startup: application
 boot: auto
 init: false
 
-# Privileged Modus für vollständigen Hardware-Zugriff
-privileged: true
-
-# USB-Geräte mappen (Host hat event0-event3)
+# USB-Geräte einzeln mappen (sicherer als privileged)
 devices:
-  - "/dev/input:/dev/input"
-  
-# Zusätzliche Capabilities
-cap_add:
-  - SYS_RAWIO
-  - DAC_OVERRIDE
+  - "/dev/input/event0:/dev/input/event0:rwm"
+  - "/dev/input/event1:/dev/input/event1:rwm"
+  - "/dev/input/event2:/dev/input/event2:rwm"
+  - "/dev/input/event3:/dev/input/event3:rwm"
 
 # udev für USB-Erkennung
 udev: true
