@@ -17,7 +17,8 @@ parse_json_value() {
     
     # Versuche jq zuerst (falls verfügbar)
     if command -v jq >/dev/null 2>&1; then
-        local value=$(jq -r ".$key // \"$default_value\"" "$json_file" 2>/dev/null)
+        local value
+        value=$(jq -r ".$key // \"$default_value\"" "$json_file" 2>/dev/null)
         if [ "$value" != "null" ] && [ -n "$value" ]; then
             echo "$value"
         else
@@ -27,9 +28,9 @@ parse_json_value() {
     fi
     
     # Fallback: Verbessertes grep/sed
-    local pattern="\"$key\"[[:space:]]*:[[:space:]]*\"([^\"]*)\""
-    local value=$(grep -o "\"$key\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" "$json_file" 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' | head -1)
-    
+    local value
+    value=$(grep -o "\"$key\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" "$json_file" 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' | head -1)
+
     if [ -n "$value" ] && [ "$value" != "null" ]; then
         echo "$value"
     else
@@ -50,7 +51,8 @@ parse_json_bool() {
     
     # Versuche jq zuerst
     if command -v jq >/dev/null 2>&1; then
-        local value=$(jq -r ".$key // $default_value" "$json_file" 2>/dev/null)
+        local value
+        value=$(jq -r ".$key // $default_value" "$json_file" 2>/dev/null)
         echo "$value"
         return
     fi

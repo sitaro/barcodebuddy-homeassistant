@@ -1,0 +1,20 @@
+# Claude Code spezifische Dateien
+CLAUDE.md
+.claude/
+.cursor/
+claude_history
+.claude_history
+
+# Editor und IDE
+.vscode/
+.idea/
+
+# Docker
+*.log
+docker-compose.override.yml
+
+# Temporäre Dateien
+*.tmp
+*.bak
+*.swp
+*~
