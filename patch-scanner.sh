@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# patch-scanner.sh v1.2.6 - Robustes Config-Parsing
+# patch-scanner.sh v1.2.7 - Robustes Config-Parsing
 
-echo "=== Barcode Buddy Scanner-Patch v1.2.6 (Robustes Config-Parsing) ==="
+echo "=== Barcode Buddy Scanner-Patch v1.2.7 (Robustes Config-Parsing) ==="
 
 # Funktion zum sicheren JSON-Parsing
 parse_json_value() {
@@ -67,10 +67,10 @@ parse_json_bool() {
     fi
 }
 
-# Standard-Werte definieren
-DEFAULT_GROCY_URL="http://ha.mathops.de:8123/hassio/ingress/a0d7b954_grocy"
-DEFAULT_API_KEY="SgEQWmOYXJvyweDV9qnhI9tZGjrW4BVxaQXSYbiLZvVfmEJeNy"
-DEFAULT_USERNAME="mathias"
+# Standard-Werte definieren (leer für sichere Defaults)
+DEFAULT_GROCY_URL=""
+DEFAULT_API_KEY=""
+DEFAULT_USERNAME="admin"
 DEFAULT_SCANNER_DEVICE="/dev/input/event3"
 
 # Konfigurationsdateien suchen
@@ -164,9 +164,9 @@ if [ -f "$GRAB_SCRIPT" ]; then
     
     cat > "$GRAB_SCRIPT" << EOF
 #!/bin/bash
-# Scanner-Wrapper v1.2.6 - Mit robuster Konfiguration
+# Scanner-Wrapper v1.2.7 - Mit robuster Konfiguration
 
-echo "Scanner-Wrapper v1.2.6 gestartet (Konfigurierter Device: $SCANNER_DEVICE)"
+echo "Scanner-Wrapper v1.2.7 gestartet (Konfigurierter Device: $SCANNER_DEVICE)"
 
 # Hardware-Check
 if [ ! -d "/dev/input/" ]; then
@@ -229,7 +229,7 @@ fi
 EOF
     
     chmod +x "$GRAB_SCRIPT"
-    echo "✅ Scanner-Wrapper v1.2.6 installiert"
+    echo "✅ Scanner-Wrapper v1.2.7 installiert"
 else
     echo "⚠️  grabInput.sh nicht gefunden"
 fi
@@ -297,7 +297,7 @@ fi
 
 cat > "$BB_CONFIG" << BBCONFIG
 <?php
-// Barcode Buddy Config - Home Assistant Add-on v1.2.6
+// Barcode Buddy Config - Home Assistant Add-on v1.2.7
 // Robuste Konfiguration mit Add-on Integration
 
 define("DISABLE_AUTHENTICATION", $PHP_DISABLE_AUTH);
@@ -355,7 +355,7 @@ if ($PHP_DEBUG_MODE) {
 ?>
 BBCONFIG
 
-echo "✅ Barcode Buddy Config v1.2.6 erstellt"
+echo "✅ Barcode Buddy Config v1.2.7 erstellt"
 
 # Grocy-Verbindung testen
 if [ -n "$GROCY_API_KEY" ] && [ "$GROCY_API_KEY" != "" ]; then
@@ -396,7 +396,7 @@ rm -f /tmp/sess_* /var/lib/php/sessions/sess_* 2>/dev/null || true
 echo "📡 Erstelle Web-Interface-Monitor..."
 cat > /usr/local/bin/web-monitor.sh << 'EOF'
 #!/bin/bash
-# Web-Interface Monitor v1.2.6
+# Web-Interface Monitor v1.2.7
 
 sleep 10
 
@@ -445,7 +445,7 @@ fi
 [ "$DEBUG_MODE" = "true" ] && export BBUDDY_IS_DEBUG="true"
 
 echo ""
-echo "🚀 Starte Barcode Buddy System v1.2.6..."
+echo "🚀 Starte Barcode Buddy System v1.2.7..."
 echo "📊 Grocy-Integration: $([[ -n "$GROCY_API_KEY" ]] && echo "✅ Aktiviert" || echo "❌ API-Key erforderlich")"
 echo "🎯 Scanner-Device: $SCANNER_DEVICE"
 echo "👤 Grocy-User: $GROCY_USERNAME"
