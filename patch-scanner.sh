@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# patch-scanner.sh v1.2.3 - Robustes Config-Parsing
+# patch-scanner.sh v1.2.4 - Robustes Config-Parsing
 
-echo "=== Barcode Buddy Scanner-Patch v1.2.3 (Robustes Config-Parsing) ==="
+echo "=== Barcode Buddy Scanner-Patch v1.2.4 (Robustes Config-Parsing) ==="
 
 # Funktion zum sicheren JSON-Parsing
 parse_json_value() {
@@ -164,9 +164,9 @@ if [ -f "$GRAB_SCRIPT" ]; then
     
     cat > "$GRAB_SCRIPT" << EOF
 #!/bin/bash
-# Scanner-Wrapper v1.2.3 - Mit robuster Konfiguration
+# Scanner-Wrapper v1.2.4 - Mit robuster Konfiguration
 
-echo "Scanner-Wrapper v1.2.3 gestartet (Konfigurierter Device: $SCANNER_DEVICE)"
+echo "Scanner-Wrapper v1.2.4 gestartet (Konfigurierter Device: $SCANNER_DEVICE)"
 
 # Hardware-Check
 if [ ! -d "/dev/input/" ]; then
@@ -229,7 +229,7 @@ fi
 EOF
     
     chmod +x "$GRAB_SCRIPT"
-    echo "✅ Scanner-Wrapper v1.2.3 installiert"
+    echo "✅ Scanner-Wrapper v1.2.4 installiert"
 else
     echo "⚠️  grabInput.sh nicht gefunden"
 fi
@@ -276,7 +276,7 @@ BB_CONFIG="/app/bbuddy/config.php"
 
 cat > "$BB_CONFIG" << BBCONFIG
 <?php
-// Barcode Buddy Config - Home Assistant Add-on v1.2.3
+// Barcode Buddy Config - Home Assistant Add-on v1.2.4
 // Robuste Konfiguration mit Add-on Integration
 
 define("DISABLE_AUTHENTICATION", $DISABLE_AUTH);
@@ -326,7 +326,7 @@ if ('$DEBUG_MODE' === 'true') {
 ?>
 BBCONFIG
 
-echo "✅ Barcode Buddy Config v1.2.3 erstellt"
+echo "✅ Barcode Buddy Config v1.2.4 erstellt"
 
 # Grocy-Verbindung testen
 if [ -n "$GROCY_API_KEY" ] && [ "$GROCY_API_KEY" != "" ]; then
@@ -367,7 +367,7 @@ rm -f /tmp/sess_* /var/lib/php/sessions/sess_* 2>/dev/null || true
 echo "📡 Erstelle Web-Interface-Monitor..."
 cat > /usr/local/bin/web-monitor.sh << 'EOF'
 #!/bin/bash
-# Web-Interface Monitor v1.2.3
+# Web-Interface Monitor v1.2.4
 
 sleep 10
 
@@ -403,7 +403,7 @@ export GROCY_API_KEY="$GROCY_API_KEY"
 export DEBUG_MODE="$DEBUG_MODE"
 
 echo ""
-echo "🚀 Starte Barcode Buddy System v1.2.3..."
+echo "🚀 Starte Barcode Buddy System v1.2.4..."
 echo "📊 Grocy-Integration: $([[ -n "$GROCY_API_KEY" ]] && echo "✅ Aktiviert" || echo "❌ API-Key erforderlich")"
 echo "🎯 Scanner-Device: $SCANNER_DEVICE"
 echo "👤 Grocy-User: $GROCY_USERNAME"
