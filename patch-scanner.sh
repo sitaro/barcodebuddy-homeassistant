@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# patch-scanner.sh v1.2.7 - Robustes Config-Parsing
+# patch-scanner.sh v1.2.8 - Robustes Config-Parsing
 
-echo "=== Barcode Buddy Scanner-Patch v1.2.7 (Robustes Config-Parsing) ==="
+echo "=== Barcode Buddy Scanner-Patch v1.2.8 (Robustes Config-Parsing) ==="
 
 # Funktion zum sicheren JSON-Parsing
 parse_json_value() {
@@ -164,9 +164,9 @@ if [ -f "$GRAB_SCRIPT" ]; then
     
     cat > "$GRAB_SCRIPT" << EOF
 #!/bin/bash
-# Scanner-Wrapper v1.2.7 - Mit robuster Konfiguration
+# Scanner-Wrapper v1.2.8 - Mit robuster Konfiguration
 
-echo "Scanner-Wrapper v1.2.7 gestartet (Konfigurierter Device: $SCANNER_DEVICE)"
+echo "Scanner-Wrapper v1.2.8 gestartet (Konfigurierter Device: $SCANNER_DEVICE)"
 
 # Hardware-Check
 if [ ! -d "/dev/input/" ]; then
@@ -229,7 +229,7 @@ fi
 EOF
     
     chmod +x "$GRAB_SCRIPT"
-    echo "✅ Scanner-Wrapper v1.2.7 installiert"
+    echo "✅ Scanner-Wrapper v1.2.8 installiert"
 else
     echo "⚠️  grabInput.sh nicht gefunden"
 fi
@@ -297,7 +297,7 @@ fi
 
 cat > "$BB_CONFIG" << BBCONFIG
 <?php
-// Barcode Buddy Config - Home Assistant Add-on v1.2.7
+// Barcode Buddy Config - Home Assistant Add-on v1.2.8
 // Robuste Konfiguration mit Add-on Integration
 
 define("DISABLE_AUTHENTICATION", $PHP_DISABLE_AUTH);
@@ -355,7 +355,7 @@ if ($PHP_DEBUG_MODE) {
 ?>
 BBCONFIG
 
-echo "✅ Barcode Buddy Config v1.2.7 erstellt"
+echo "✅ Barcode Buddy Config v1.2.8 erstellt"
 
 # Grocy-Verbindung testen
 if [ -n "$GROCY_API_KEY" ] && [ "$GROCY_API_KEY" != "" ]; then
@@ -396,7 +396,7 @@ rm -f /tmp/sess_* /var/lib/php/sessions/sess_* 2>/dev/null || true
 echo "📡 Erstelle Web-Interface-Monitor..."
 cat > /usr/local/bin/web-monitor.sh << 'EOF'
 #!/bin/bash
-# Web-Interface Monitor v1.2.7
+# Web-Interface Monitor v1.2.8
 
 sleep 10
 
@@ -436,16 +436,19 @@ export BBUDDY_DISABLE_AUTHENTICATION="$PHP_DISABLE_AUTH"
 export BBUDDY_REQUIRE_API_KEY="$PHP_REQUIRE_API_KEY"
 
 # Grocy-Konfiguration per Umgebungsvariable überschreiben (umgeht Setup-Screen)
-if [ -n "$GROCY_API_KEY" ] && [ "$GROCY_API_KEY" != "" ]; then
+# NUR setzen wenn BEIDE Werte vorhanden sind (verhindert HTTP 500 bei leeren Werten)
+if [ -n "$GROCY_API_KEY" ] && [ "$GROCY_API_KEY" != "" ] && [ -n "$GROCY_API_URL" ] && [ "$GROCY_API_URL" != "" ]; then
     export BBUDDY_OVERRIDDEN_USER_CONFIG="GROCY_API_URL=$GROCY_API_URL;GROCY_API_KEY=$GROCY_API_KEY"
     echo "🔧 Grocy-Config via BBUDDY_OVERRIDDEN_USER_CONFIG gesetzt"
+else
+    echo "ℹ️  Grocy-Config leer - BarcodeBuddy startet ohne Grocy-Integration"
 fi
 
 # Debug-Modus für BarcodeBuddy
 [ "$DEBUG_MODE" = "true" ] && export BBUDDY_IS_DEBUG="true"
 
 echo ""
-echo "🚀 Starte Barcode Buddy System v1.2.7..."
+echo "🚀 Starte Barcode Buddy System v1.2.8..."
 echo "📊 Grocy-Integration: $([[ -n "$GROCY_API_KEY" ]] && echo "✅ Aktiviert" || echo "❌ API-Key erforderlich")"
 echo "🎯 Scanner-Device: $SCANNER_DEVICE"
 echo "👤 Grocy-User: $GROCY_USERNAME"
